@@ -34,7 +34,7 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         cam = Camera.main;
-        SetState(startingState);
+        OnGameStateChanged?.Invoke(startingState);
 
         float vertical = cam.orthographicSize;
         float horizontal = vertical * cam.aspect;
@@ -56,4 +56,5 @@ public enum GameState
     Menu,
     Gameplay,
     Pause,
+    GameOver
 }
