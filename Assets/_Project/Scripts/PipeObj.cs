@@ -8,7 +8,7 @@ public class PipeObj : MonoBehaviour
     public Transform pipeOpening;
     private float speed;
 
-    private void Update()
+    private void LateUpdate()
     {
         pipeOpening.position = tubeTransform.GetChild(0).position;
 

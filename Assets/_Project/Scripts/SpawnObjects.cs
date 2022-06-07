@@ -14,6 +14,8 @@ public class SpawnObjects : MonoBehaviour
     [SerializeField] private float moveSpeed = 2f;
     [SerializeField] private float spawnTime = 1f;
 
+    private bool wasGameOver;
+
     [SerializeField] private PipeObj pipeObject;
 
     #region SubscribeToEvent
@@ -24,7 +26,9 @@ public class SpawnObjects : MonoBehaviour
 
     private void OnGameStateChanged(GameState _currentGameState)
     {
-        if (_currentGameState == GameState.Menu)
+        bool _resetGame = wasGameOver && _currentGameState != GameState.GameOver;
+
+        if (_currentGameState == GameState.Menu || _resetGame)
         {
             StopCoroutine(Spawner());
             if (pipeObject != null)
@@ -35,9 +39,12 @@ public class SpawnObjects : MonoBehaviour
                 }
             }
         }
+        wasGameOver = _currentGameState == GameState.GameOver;
+
+        Time.timeScale = GameManager.Instance.CurrentGameState == GameState.Gameplay ? 1 : 0;
     }
 
-    private void OnDisable()
+    private void OnDestroy()
     {
         GameManager.Instance.OnGameStateChanged -= OnGameStateChanged;
     }
@@ -50,11 +57,6 @@ public class SpawnObjects : MonoBehaviour
 
         SetBoundaries();
         StartCoroutine(Spawner());
-    }
-
-    private void Update()
-    {
-        Time.timeScale = GameManager.Instance.CurrentGameState == GameState.Gameplay ? 1 : 0;
     }
 
     private IEnumerator Spawner()
