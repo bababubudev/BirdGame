@@ -4,29 +4,53 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
+    private static readonly object _lock = new object();
+    private static bool _applicationIsQuitting;
+
     private static GameManager _instance;
     public static GameManager Instance 
     {
         get
         {
+            if (_applicationIsQuitting) return null;
             if (_instance == null)
             {
-                Debug.LogError("GameManager is null");
+                lock (_lock)
+                {
+                    if (_instance == null)
+                    {
+                        GameObject go = new GameObject("GameManager");
+                        _instance = go.AddComponent<GameManager>();
+                        DontDestroyOnLoad(go);
+                    }
+                }
             }
             return _instance;
         }
+        private set { }
     }
     
-    private Camera cam;  
-    [SerializeField] private GameState startingState;
-    [HideInInspector] public Vector3 bottomLeft;
-    [HideInInspector] public Rect boundary;
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void StartUp()
+    {
+        Instance.Init();
+    }
 
+    private void OnDestroy()
+    {
+        _applicationIsQuitting = true;
+    }
+
+    public static int currentScore;
     public GameState CurrentGameState { get; private set; }
     public delegate void StateChangeHandler(GameState _currentGameState);
     public event StateChangeHandler OnGameStateChanged;
 
-    private void Awake()
+    private Camera cam;
+    [HideInInspector] public Vector3 bottomLeft;
+    [HideInInspector] public Rect boundary;
+
+    private void Init()
     {
         _instance = this;
     }
@@ -34,7 +58,7 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         cam = Camera.main;
-        OnGameStateChanged?.Invoke(startingState);
+        OnGameStateChanged?.Invoke(GameState.Menu);
 
         float vertical = cam.orthographicSize;
         float horizontal = vertical * cam.aspect;

@@ -8,7 +8,19 @@ public class BirdController : MonoBehaviour
 
     private bool jumpDesired;
     private bool isColliding;
+
     private bool wasGameOver;
+    private bool _passedPipe;
+    private bool PassedPipe
+    {
+        get => _passedPipe;
+        set
+        {
+            if (!_passedPipe && value) GameManager.currentScore++;
+            _passedPipe = value;
+        }
+    }
+
     private bool doneOnce;
 
     [SerializeField] private float gravity = 1;
@@ -17,7 +29,6 @@ public class BirdController : MonoBehaviour
     private Vector3 velocity;
     private Vector3 positionFlat;
     private Vector3 resetPosition;
-    private Vector3 struckVelocity;
 
     private SpriteRenderer birdSprite;
     [SerializeField] private LayerMask collisionMask;
@@ -26,6 +37,7 @@ public class BirdController : MonoBehaviour
     private void OnEnable()
     {
         GameManager.Instance.OnGameStateChanged += OnGameStateChanged;
+
         birdSprite = GetComponent<SpriteRenderer>();
         resetPosition = transform.position;
     }
@@ -37,12 +49,8 @@ public class BirdController : MonoBehaviour
         if (_currentGameState == GameState.Menu) transform.position = resetPosition;
         if (wasGameOver && _currentGameState != GameState.GameOver) transform.position = resetPosition;
         wasGameOver = _currentGameState == GameState.GameOver;
+        if (wasGameOver) GameManager.currentScore = 0;
         doneOnce = false;
-    }
-
-    private void OnDestroy()
-    {
-        GameManager.Instance.OnGameStateChanged -= OnGameStateChanged;
     }
     #endregion
 
@@ -54,6 +62,8 @@ public class BirdController : MonoBehaviour
     private void Update()
     {
         isColliding = Physics2D.CircleCast(transform.position, 0.5f, Vector2.right, 0f, collisionMask);
+        PassedPipe = Physics2D.Raycast(transform.position - Vector3.right, Vector3.down, boundary.height, collisionMask);
+
         if (isColliding) GameManager.Instance.SetState(GameState.GameOver);
 
         jumpDesired |= Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Mouse0);

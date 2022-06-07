@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 public class MainMenuHandler : MonoBehaviour
 {
@@ -10,6 +11,8 @@ public class MainMenuHandler : MonoBehaviour
     [SerializeField] private GameObject mainMenu;
     [SerializeField] private GameObject pauseMenu;
     [SerializeField] private GameObject gameoverMenu;
+    [SerializeField] private GameObject scorePanel;
+    [SerializeField] private TMP_Text scoreText;
 
     #region SubscribeToEvent
     private void OnEnable()
@@ -24,11 +27,6 @@ public class MainMenuHandler : MonoBehaviour
         pauseMenu.SetActive(_currentGameState == GameState.Pause);
         gameoverMenu.SetActive(_currentGameState == GameState.GameOver);
     }
-
-    private void OnDestroy()
-    {
-        GameManager.Instance.OnGameStateChanged -= OnGameStateChanged;
-    }
     #endregion
 
     public void Update()
@@ -40,6 +38,7 @@ public class MainMenuHandler : MonoBehaviour
 
         if (isNotMenu)
         {
+            scorePanel.SetActive(true);
             GameState changedState = isPaused ? GameState.Pause : GameState.Gameplay;
             GameManager.Instance.SetState(changedState);
         }
@@ -47,7 +46,10 @@ public class MainMenuHandler : MonoBehaviour
         {
             isPaused = false;
             pauseMenu.SetActive(false);
+            scorePanel.SetActive(false);
         }
+
+        scoreText.text = GameManager.currentScore.ToString();
     }
 
     public void PlayGame()
