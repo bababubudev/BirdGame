@@ -43,11 +43,6 @@ public class SpawnObjects : MonoBehaviour
 
         Time.timeScale = GameManager.Instance.CurrentGameState == GameState.Gameplay ? 1 : 0;
     }
-
-    private void OnDestroy()
-    {
-        GameManager.Instance.OnGameStateChanged -= OnGameStateChanged;
-    }
     #endregion
 
     private void Start()
@@ -57,6 +52,10 @@ public class SpawnObjects : MonoBehaviour
 
         SetBoundaries();
         StartCoroutine(Spawner());
+    }
+
+    private void Update()
+    {
     }
 
     private IEnumerator Spawner()
@@ -91,11 +90,9 @@ public class SpawnObjects : MonoBehaviour
         scaleTop.y = Random.Range(minHeight, maxHeight);
 
         float totalScaleY = (scaleTop.y + scaleBottom.y) + distanceBetween;
-        float changeAmount = 0;
-
         if (totalScaleY > boundary.height)
         {
-            changeAmount = totalScaleY - boundary.height;
+            float changeAmount = totalScaleY - boundary.height;
             float randomTaker = Random.Range(0.2f, 0.6f);
             //print($"Random: {randomTaker}, From: {1 - randomTaker}");
 
