@@ -16,7 +16,11 @@ public class BirdController : MonoBehaviour
         get => _passedPipe;
         set
         {
-            if (!_passedPipe && value) GameManager.currentScore++;
+            if (!_passedPipe && value)
+            {
+                GameManager.currentScore++;
+            }
+
             _passedPipe = value;
         }
     }
@@ -28,7 +32,7 @@ public class BirdController : MonoBehaviour
 
     private Vector3 velocity;
     private Vector3 positionFlat;
-    private Vector3 resetPosition;
+    private Vector3 resetPosition = new Vector3(-3f, 0f, 0f);
 
     private SpriteRenderer birdSprite;
     [SerializeField] private LayerMask collisionMask;
@@ -39,17 +43,29 @@ public class BirdController : MonoBehaviour
         GameManager.Instance.OnGameStateChanged += OnGameStateChanged;
 
         birdSprite = GetComponent<SpriteRenderer>();
-        resetPosition = transform.position;
     }
 
     private void OnGameStateChanged(GameState _currentGameState)
     {
         enabled = !(_currentGameState == GameState.Pause);
         birdSprite.enabled = _currentGameState != GameState.Menu;
-        if (_currentGameState == GameState.Menu) transform.position = resetPosition;
-        if (wasGameOver && _currentGameState != GameState.GameOver) transform.position = resetPosition;
+        if (_currentGameState == GameState.Menu)
+        {
+            transform.position = resetPosition;
+        }
+
+        if (wasGameOver && _currentGameState != GameState.GameOver)
+        {
+            transform.position = resetPosition;
+        }
+
         wasGameOver = _currentGameState == GameState.GameOver;
-        if (wasGameOver) GameManager.currentScore = 0;
+
+        if (wasGameOver)
+        {
+            GameManager.currentScore = 0;
+        }
+
         doneOnce = false;
     }
     #endregion
@@ -67,26 +83,12 @@ public class BirdController : MonoBehaviour
         if (isColliding) GameManager.Instance.SetState(GameState.GameOver);
 
         jumpDesired |= Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Mouse0);
-        if (GameManager.Instance.CurrentGameState == GameState.GameOver)
+
+        switch (GameManager.Instance.CurrentGameState)
         {
-            //Animation
-            if (transform.position.y > -boundary.height * 0.5f)
-            {
-                if (!doneOnce)
-                {
-                    doneOnce = true;
-                    velocity = Vector3.zero;
-
-                    float jumpSpeed = Mathf.Sqrt(-2f * -1f * 200f);
-                    velocity += Vector3.up * jumpSpeed;
-                }
-                else
-                {
-                    velocity.y -= gravity;
-                }
-
-                transform.position += velocity * Time.unscaledDeltaTime;
-            }
+            case GameState.GameOver:
+                AnimateDeath();
+                break;
         }
     }
 
@@ -113,8 +115,32 @@ public class BirdController : MonoBehaviour
         {
             velocity = Vector3.zero;
             positionFlat.y = positionFlat.y > (boundary.height * 0.5f) ? boundary.height * 0.5f : -boundary.height * 0.5f;
+
+            if (positionFlat.y < boundary.height * 0.5f)
+                GameManager.Instance.SetState(GameState.GameOver);
         }
 
         transform.position = positionFlat;
+    }
+
+    private void AnimateDeath()
+    {
+        if (transform.position.y > -boundary.height * 0.5f)
+        {
+            if (!doneOnce)
+            {
+                doneOnce = true;
+                velocity = Vector3.zero;
+
+                float jumpSpeed = Mathf.Sqrt(-2f * -1f * 200f);
+                velocity += Vector3.up * jumpSpeed;
+            }
+            else
+            {
+                velocity.y -= gravity;
+            }
+
+            transform.position += velocity * Time.unscaledDeltaTime;
+        }
     }
 }

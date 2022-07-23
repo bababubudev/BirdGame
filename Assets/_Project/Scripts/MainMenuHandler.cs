@@ -49,7 +49,7 @@ public class MainMenuHandler : MonoBehaviour
             scorePanel.SetActive(false);
         }
 
-        scoreText.text = GameManager.currentScore.ToString();
+        scoreText.text = $"Score: {GameManager.currentScore}";
     }
 
     public void PlayGame()

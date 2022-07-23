@@ -54,10 +54,6 @@ public class SpawnObjects : MonoBehaviour
         StartCoroutine(Spawner());
     }
 
-    private void Update()
-    {
-    }
-
     private IEnumerator Spawner()
     {
         while (true)
