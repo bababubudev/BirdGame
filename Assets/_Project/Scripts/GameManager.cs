@@ -4,41 +4,33 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    private static readonly object _lock = new object();
-    private static bool _applicationIsQuitting;
-
-    private static GameManager _instance;
+    private static GameManager _instance = null;
     public static GameManager Instance 
     {
         get
         {
-            if (_applicationIsQuitting) return null;
             if (_instance == null)
             {
-                lock (_lock)
+                _instance = FindObjectOfType<GameManager>();
+                if (_instance == null)
                 {
-                    if (_instance == null)
+                    string goName = typeof(AudioManager).Name;
+                    GameObject go = GameObject.Find(goName);
+
+                    if (go == null)
                     {
-                        GameObject go = new GameObject("GameManager");
-                        _instance = go.AddComponent<GameManager>();
-                        DontDestroyOnLoad(go);
+                        go = new GameObject
+                        {
+                            name = goName
+                        };
                     }
+
+                    _instance = go.AddComponent<GameManager>();
                 }
             }
+
             return _instance;
         }
-        private set { }
-    }
-    
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-    private static void StartUp()
-    {
-        Instance.Init();
-    }
-
-    private void OnDestroy()
-    {
-        _applicationIsQuitting = true;
     }
 
     public static int currentScore;
@@ -49,11 +41,6 @@ public class GameManager : MonoBehaviour
     private Camera cam;
     [HideInInspector] public Vector3 bottomLeft;
     [HideInInspector] public Rect boundary;
-
-    private void Init()
-    {
-        _instance = this;
-    }
 
     private void Start()
     {
