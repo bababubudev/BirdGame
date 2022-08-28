@@ -10,11 +10,14 @@ public class SpawnObjects : MonoBehaviour
 
     [Range(0, 1f), SerializeField] private float pipeMaxHeight = 0.75f;
     [Range(0, 1f), SerializeField] private float pipeMinHeight = 0.15f;
-    [SerializeField] private float distanceToPipe = 0.15f;
+    [SerializeField] private float minGap = 0.15f;
     [SerializeField] private float moveSpeed = 2f;
     [SerializeField] private float spawnTime = 1f;
 
+    [SerializeField] private ModifyValues modifiedValues;
+
     private bool wasGameOver;
+    private bool isGaming;
 
     [SerializeField] private PipeObj pipeObject;
 
@@ -22,13 +25,15 @@ public class SpawnObjects : MonoBehaviour
     private void OnEnable()
     {
         GameManager.Instance.OnGameStateChanged += OnGameStateChanged;
+        ValueModification();
     }
 
     private void OnGameStateChanged(GameState _currentGameState)
     {
         bool _resetGame = wasGameOver && _currentGameState != GameState.GameOver;
+        isGaming = _currentGameState == GameState.Gameplay;
 
-        if (_currentGameState == GameState.Menu || _resetGame)
+        if (_currentGameState == GameState.MainMenu || _resetGame)
         {
             StopCoroutine(Spawner());
             if (pipeObject != null)
@@ -45,8 +50,33 @@ public class SpawnObjects : MonoBehaviour
     }
     #endregion
 
+    private void ValueModification()
+    {
+        modifiedValues.MoveSpeed = moveSpeed;
+        modifiedValues.SpawnTime = spawnTime;
+        modifiedValues.PipeGap = minGap;
+    }
+
+    private void Modify(string _modifiedName)
+    {
+        switch (_modifiedName)
+        {
+            case nameof(modifiedValues.MoveSpeed):
+                moveSpeed = modifiedValues.MoveSpeed;
+                break;
+            case nameof(modifiedValues.PipeGap):
+                minGap = modifiedValues.PipeGap;
+                break;
+            case nameof(modifiedValues.SpawnTime):
+                spawnTime = modifiedValues.SpawnTime;
+                break;
+        }
+    }
+
     private void Start()
     {
+        modifiedValues.OnValueChanged += Modify;
+
         boundary = GameManager.Instance.boundary;
         bottomLeft = GameManager.Instance.bottomLeft;
 
@@ -58,20 +88,27 @@ public class SpawnObjects : MonoBehaviour
     {
         while (true)
         {
-            SpawnPipes();
-            yield return new WaitForSeconds(spawnTime);
+            if (isGaming)
+            {
+                yield return new WaitForSeconds(spawnTime);
+                SpawnPipes();
+            }
+            else
+            {
+                yield return null;
+            }
         }
     }
 
     private void SpawnPipes()
     {
         Quaternion flipped = Quaternion.Euler(0f, 0f, 180f);
-        PipeObj spawnedPipeBottom = Instantiate(pipeObject, boundaryBox.bottomRight + (Vector2.right * 2f), Quaternion.identity, transform);
         PipeObj spawnedPipeTop = Instantiate(pipeObject, boundaryBox.topRight + (Vector2.right * 2f), flipped, transform);
+        PipeObj spawnedPipeBottom = Instantiate(pipeObject, boundaryBox.bottomRight + (Vector2.right * 2f), Quaternion.identity, transform);
         spawnedPipeBottom.SetSpeed(moveSpeed);
         spawnedPipeTop.SetSpeed(moveSpeed);
 
-        SetPipeLengths(spawnedPipeTop, spawnedPipeBottom, distanceToPipe);
+        SetPipeLengths(spawnedPipeTop, spawnedPipeBottom, minGap);
     }
 
     private void SetPipeLengths(PipeObj pipeTop, PipeObj pipeBottom, float distanceBetween)
@@ -99,7 +136,7 @@ public class SpawnObjects : MonoBehaviour
         pipeBottom.tubeTransform.localScale = scaleBottom;
         pipeTop.tubeTransform.localScale = scaleTop;
 
-        //print($"Differ: {changeAmount}, ScaleY: {scaleBottom.y}, ScaleYTop: {scaleTop.y}, TotalScale: {totalScaleY}, Height: {boundary.height}");
+        //print($"ScaleY: {scaleBottom.y}, ScaleYTop: {scaleTop.y}, TotalScale: {totalScaleY}, Height: {boundary.height}");
     }
 
     private void SetBoundaries()

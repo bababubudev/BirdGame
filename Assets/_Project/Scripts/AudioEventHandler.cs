@@ -7,6 +7,8 @@ public class AudioEventHandler : MonoBehaviour
     [SerializeField] private AudioClip deathMusic;
 
     private int _prevScore;
+    private bool isGameplay;
+    private bool triggered = true;
 
     private void OnEnable()
     {
@@ -17,21 +19,30 @@ public class AudioEventHandler : MonoBehaviour
     {
         switch (_currentGameState)
         {
-            case GameState.Gameplay:
-                AudioManager.Instance.PlayMusic(gameMusic, 0.5f);
-                break;
-            case GameState.Menu:
+            case GameState.MainMenu:
+                isGameplay = triggered = false;
                 AudioManager.Instance.PlayMusic(menuMusic);
                 break;
             case GameState.GameOver:
+                isGameplay = triggered = false;
                 AudioManager.Instance.PlayMusic(deathMusic, 2f);
                 AudioManager.Instance.PlaySound("Death");
+                break;
+            case GameState.Gameplay:
+            case GameState.Pause:
+                isGameplay = true;
                 break;
         }
     }
 
     private void Update()
     {
+        if (isGameplay && !triggered)
+        {
+            triggered = true;
+            AudioManager.Instance.PlayMusic(gameMusic, 0.5f);
+        }
+
         if (_prevScore != GameManager.currentScore)
         {
             _prevScore = GameManager.currentScore;
